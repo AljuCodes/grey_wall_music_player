@@ -59,6 +59,7 @@ class PlaylistDetailScreen extends StatelessWidget {
       body: Center(
         child: ListView.builder(
           itemBuilder: ((context, index) => songwidget(
+            audioList: [],
                 isPlaylist: true,
                 song: [] as SongModel,
               )),

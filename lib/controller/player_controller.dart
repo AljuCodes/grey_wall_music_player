@@ -12,26 +12,25 @@ class PlayerController extends GetxController {
   }
 
   Future<void> initializeInitialPlaylist() async {
-    List<SongBoxModel> allSongs =
-        hiveCtrl.getSongBox().values.toList();
-    allSongs.sort(((a, b) => a.songTitle.compareTo(b.songTitle)));
+    List<SongBoxModel> allSongs = hiveCtrl.getSongBox().values.toList();
+    // allSongs.sort(((a, b) => a.songTitle.compareTo(b.songTitle)));
     List<Audio> songToPlay = [];
     for (SongBoxModel song in allSongs) {
-      final x = song.songUrl;
+ 
       songToPlay.add(Audio.file(song.songUrl,
           metas: Metas(
               title: song.songTitle,
               artist: song.songArtists,
               id: song.songId.toString())));
     }
-    await audioplayer1.open(
-      Playlist(audios: songToPlay),
-      autoStart: false,
-      showNotification: permissionCtrl.storage.read('notification') ?? true,
-      notificationSettings: const NotificationSettings(
-        stopEnabled: false,
-        seekBarEnabled: true,
-      )
-    );
+    // print("song to play${songToPlay.toList()}");
+    // audioplayer1.open(Playlist(audios: songToPlay),
+    //     autoStart: false,
+    //     playInBackground: PlayInBackground.enabled,
+    //     showNotification: permissionCtrl.storage.read('notification') ?? true,
+    //     notificationSettings: const NotificationSettings(
+    //       stopEnabled: false,
+    //       seekBarEnabled: true,
+    //     ));
   }
 }

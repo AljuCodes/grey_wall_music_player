@@ -34,6 +34,7 @@ class HiveBoxController extends GetxController {
       sortType: SongSortType.DISPLAY_NAME,
       orderType: OrderType.ASC_OR_SMALLER,
     );
+    
     for (SongModel song in fetchedSongs) {
       if (song.fileExtension == 'mp3' ||
           song.fileExtension == 'opus' &&

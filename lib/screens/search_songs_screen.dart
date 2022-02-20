@@ -75,9 +75,9 @@ class _SearchScreenState extends State<SearchScreen> {
               ),
             ),
             const SizedBox(height: 30,),
-            songwidget(song: [] as SongModel),
-            songwidget(song: [] as SongModel,),
-            songwidget(song: [] as SongModel,)
+            songwidget(song: [] as SongModel,audioList: [],),
+            songwidget(song: [] as SongModel,audioList: [],),
+            songwidget(song: [] as SongModel,audioList: [],)
           ],
         ),
       ),

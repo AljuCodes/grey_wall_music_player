@@ -1,18 +1,38 @@
 import 'package:assets_audio_player/assets_audio_player.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:grey_wall/audio.dart';
+import 'package:grey_wall/main.dart';
 import 'package:grey_wall/screens/home_screen.dart';
 import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
+import 'package:on_audio_query/on_audio_query.dart';
+import 'package:on_audio_room/on_audio_room.dart';
 
 class PlayerScreen extends StatefulWidget {
   PlayerScreen();
+  bool isFav = false;
+  bool jj(PlayingAudio playingAudio) {
+    OnAudioRoom()
+        .queryFavorites(
+      limit: 50,
+      sortType: null,
+    )
+        .then((value) async {
+      for (var song in value) {
+        if (song.title == playingAudio.audio.metas.title) {
+          print(
+              "match found ${song.title} == ${playingAudio.audio.metas.title}");
+          isFav = await OnAudioRoom().checkIn(RoomType.FAVORITES, song.key);
+        }
+      }
+    });
+    return isFav;
+  }
+
 //int index;
   @override
   _PlayerScreenState createState() => _PlayerScreenState();
 }
-
-
-
 
 class _PlayerScreenState extends State<PlayerScreen> {
   @override
@@ -31,8 +51,10 @@ class _PlayerScreenState extends State<PlayerScreen> {
               if (playing == null) {
                 return Text("sorry");
               }
-              var myAudio =  playing.audio;
 
+              var myAudio = playing.audio;
+              widget.isFav = widget.jj(myAudio);
+              print("the isFav when building ${widget.isFav}");
               return Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -88,15 +110,32 @@ class _PlayerScreenState extends State<PlayerScreen> {
                       Row(
                         children: [
                           IconButton(
-                            onPressed: () {
-                         
-                            },
+                            onPressed: () {},
                             icon: Icon(
                               Icons.playlist_add,
                             ),
                           ),
-                          IconButton(
-                              onPressed: () {}, icon: Icon(Icons.favorite)),
+                          audioplayer1.builderRealtimePlayingInfos(builder:
+                              (context, RealtimePlayingInfos? currentinfo) {
+                            if (currentinfo == null) {
+                              return Text("sorry");
+                            }
+                            return IconButton(
+                              onPressed: () async {
+                                var playingAudio = playing.audio;
+                                widget.isFav
+                                    ? removeFav(playingAudio)
+                                    : addFav(myAudio);
+                                print("onPress ${widget.isFav}");
+                                setState(() {});
+                                // ? removeFav()
+                                // :
+                              },
+                              icon: Icon(widget.isFav
+                                  ? Icons.favorite
+                                  : Icons.favorite_border),
+                            );
+                          }),
                         ],
                       ),
                     ],
@@ -148,7 +187,6 @@ class _PlayerScreenState extends State<PlayerScreen> {
                               progressBarColor: Theme.of(context).primaryColor,
                               progress: currentinfo.currentPosition,
                               total: currentinfo.duration,
-                              
                               onSeek: (to) {
                                 audioplayer1.seek(to);
                               },
@@ -229,7 +267,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                             ],
                           ),
                         ),
-fn1(context),
+                        fn1(context),
                         // play
                         // Positioned(
                         //   left: width*.4,
@@ -255,6 +293,63 @@ fn1(context),
       ),
     );
   }
+
+  removeFav(dynamic playingAudio) {
+    OnAudioRoom()
+        .queryFavorites(
+      limit: 50,
+      sortType: null,
+    )
+        .then((value) {
+      for (var song in value) {
+        if (song.title == playingAudio.audio.metas.title) {
+          print(
+              "match found ${song.title} == ${playingAudio.audio.metas.title}");
+          audioRoom1
+              .deleteFrom(
+            RoomType.FAVORITES,
+            song.key,
+          )
+              .then((value) {
+            print("song isremoved= $value from the favorites");
+            setState(() {
+              widget.isFav = false;
+            });
+          });
+        }
+      }
+    });
+  }
+
+  addFav(PlayingAudio myAudio) async {
+    await OnAudioQuery()
+        .querySongs(
+      sortType: SongSortType.DISPLAY_NAME,
+      orderType: OrderType.ASC_OR_SMALLER,
+    )
+        .then((value) {
+      SongModel songModel1 = value[0];
+      for (var song in value) {
+        if (song.title == myAudio.audio.metas.title) {
+          // print("got it");
+          songModel1 = song;
+          audioRoom1
+              .addTo(
+            RoomType.FAVORITES,
+            songModel1.getMap.toFavoritesEntity(),
+            ignoreDuplicate: false,
+          )
+              .then((value) {
+            print("the song added to favorite");
+            setState(() {
+              widget.isFav = true;
+            });
+          });
+        }
+      }
+      return value;
+    });
+  }
 }
 
 Widget fn1(BuildContext ctx) {
@@ -263,17 +358,17 @@ Widget fn1(BuildContext ctx) {
       player: audioplayer1,
       builder: (ctx, isPlaying1) {
         return Container(
-          margin: EdgeInsets.only(left: 165,top: 6),
+          margin: EdgeInsets.only(left: 165, top: 6),
           child: InkWell(
               onTap: () {
-                print("working");
+                // print("working");
                 audioplayer1.playOrPause();
-                print(isPlaying1);
+                // print(isPlaying1);
               },
               child: Icon(
                 isPlaying1
                     ? Icons.pause_circle_outline_outlined
-                    :  Icons.play_circle_outline,
+                    : Icons.play_circle_outline,
                 size: 80,
               )),
         );

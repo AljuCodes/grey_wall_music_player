@@ -14,7 +14,7 @@ class AlbumDetailScreen extends StatelessWidget {
         title: Text(ArtistName),
       ),
       body: Center(
-        child: ListView.builder(itemBuilder: ((context, index) => songwidget(song: [] as SongModel,)),itemCount: 15,),
+        child: ListView.builder(itemBuilder: ((context, index) => songwidget(song: [] as SongModel,audioList: [],)),itemCount: 15,),
       ),
     );
     

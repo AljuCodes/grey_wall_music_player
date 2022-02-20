@@ -22,54 +22,28 @@ class _HomeScreenState extends State<HomeScreen> {
 
   String? artistName;
 
-  void lll() async {
-    print("lll is working");
-    List<SongModel> fetchedSongs = await OnAudioQuery().querySongs(
-      sortType: SongSortType.DISPLAY_NAME,
-      orderType: OrderType.ASC_OR_SMALLER,
-    );
-    print("fetched song is ${fetchedSongs.toList()}");
-    for (SongModel song in fetchedSongs) {
-      print(
-          "song title is ${song.title} song artist is ${song.artist} song id is ${song.id} ");
-    }
-  }
-// void fn(){
-//     audioplayer1.open(Playlist(audios: plList),
-//         autoStart: false, showNotification: true);
-//   }
-
-  // void fun() async {
-  //   final OnAudioQuery _audioQuery = OnAudioQuery();
-  //   List<dynamic> something = await _audioQuery.queryWithFilters(
-  //     // The [text] to search
-  //     "Alan",
-  //     // The type of search you want.
-  //     // All types:
-  //     //   * WithFiltersType.AUDIOS
-  //     //   * WithFiltersType.ALBUMS
-  //     //   * WithFiltersType.PLAYLISTS
-  //     //   * WithFiltersType.ARTISTS
-  //     //   * WithFiltersType.GENRES
-  //     WithFiltersType.AUDIOS,
-  //     // This method has [args] as parameter. With this value you can create
-  //     // a more 'advanced' search.
-  //     args: AudiosArgs.ARTIST,
+  // void lll() async {
+  //   print("lll is working");
+  //   List<SongModel> fetchedSongs = await OnAudioQuery().querySongs(
+  //     sortType: SongSortType.DISPLAY_NAME,
+  //     orderType: OrderType.ASC_OR_SMALLER,
   //   );
-  //   print(something.toList());
+  //   print("fetched song is ${fetchedSongs.toList()}");
+  //   for (SongModel song in fetchedSongs) {
+  //     print(
+  //         "song title is ${song.title} song artist is ${song.artist} song id is ${song.id} ");
+  //   }
   // }
 
   @override
   Widget build(BuildContext context) {
     //  fn();
-    lll();
+    // lll();
 
     final height = MediaQuery.of(context).size.height;
     final width = MediaQuery.of(context).size.width;
-    //
 
-    // audioplayer1.open(Playlist(audios:plList ));
-    print("bulid");
+
     return Scaffold(
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: Container(
@@ -169,19 +143,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     height: 50,
                     width: 50,
                     child: fn2(context),
-                    // Center(
-                    //   child: IconButton(
-                    //     onPressed: () {
-                    //       print("playorPause pressed");
-                    //       audioplayer1.playOrPause();
-                    //     },
-                    //     icon: const Icon(
-                    //       Icons.pause,
-                    //       size: 50,
-                    //       color: Colors.white,
-                    //     ),
-                    //   ),
-                    // ),
                   ),
                 ),
               ],
@@ -192,6 +153,7 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: const Text("Home"),
         actions: [
+          // serach songs and more
           PopupMenuButton<int>(
             padding: const EdgeInsets.all(0),
             enableFeedback: true,
@@ -245,36 +207,69 @@ class _HomeScreenState extends State<HomeScreen> {
                   valueListenable: hiveCtrl.getSongBox().listenable(),
                   builder: (context, box, _) {
                     final songs = box.values.toList().cast<SongBoxModel>();
-                    print("song is empty ${songs.isEmpty}");
+                    // print("songs to play in ");
+                    // print("song is empty ${songs.isEmpty}");
                     if (songs.isEmpty) {
                       return const Center(
                         child: Text("NO SONGS FOUND"),
                       );
                     } else {
-                      return
-                      
-                      
-                       Container(
-                          child: RefreshIndicator(
-                        onRefresh: hiveCtrl.fetchAllsongs,
-                        child: ListView.builder(
-                          itemCount: songs.length,
-                          itemBuilder: (context, index) {
-                          return songwidget(
-                            song: SongModel({
-                              "_title":songs[index].songTitle,
-                              "_id":songs[index].songId,
-                              "_data":"11111",
-                              "_uri":songs[index].songUrl,
-                              "_display_name":songs[index].songTitle,
-                              "_uri":songs[index].songUrl,
-                            }) ,
-                            index: index,
-                              artistName: songs[index].songArtists!,
-                              songName: songs[index].songTitle);
-                        }),
-                      ),
+                      return FutureBuilder<List<SongModel>>(
+                        // Default values:
+                        future: OnAudioQuery().querySongs(
+                          sortType: SongSortType.DISPLAY_NAME,
+                          orderType: OrderType.ASC_OR_SMALLER,
+                        ),
+                        builder: (context, item) {
+                          // Loading content
+                          if (item.data == null)
+                            return const CircularProgressIndicator();
+
+                          // When you try "query" without asking for [READ] or [Library] permission
+                          // the plugin will return a [Empty] list.
+                          if (item.data!.isEmpty)
+                            return const Text("Nothing found!");
+                          List<Audio> audioList = [];
+                          List<SongModel> SongModelList = item.data!;
+                          for (var song in SongModelList) {
+                            audioList.add(Audio.file(song.data,
+                                metas: Metas(
+                                    title: song.title,
+                                    artist: song.artist,
+                                    id: song.id.toString())));
+                          }
+
+                          // You can use [item.data!] direct or you can create a:
+                          // List<SongModel> songs = item.data!;
+                          return ListView.builder(
+                            itemCount: item.data!.length,
+                            itemBuilder: (context, index) {
+                              return songwidget(
+
+                                audioList: audioList,
+                                song: item.data![index],
+                                artistName: item.data![index].artist!,
+                                index: index,
+                                songName: item.data![index].title,
+                              );
+                            },
+                          );
+                        },
                       );
+                      //  Container(
+                      //     child: RefreshIndicator(
+                      //   onRefresh: hiveCtrl.fetchAllsongs,
+                      //   child: ListView.builder(
+                      //     itemCount: songs.length,
+                      //     itemBuilder: (context, index) {
+                      //     return songwidget(
+                      //       song: [] as SongModel ,
+                      //       index: index,
+                      //         artistName: songs[index].songArtists!,
+                      //         songName: songs[index].songTitle);
+                      //   }),
+                      // ),
+                      // );
                     }
                   }),
             ),
@@ -301,24 +296,3 @@ Widget fn2(BuildContext ctx) {
         );
       });
 }
-
-// void fn() {
-//   print("Started working");
-
-//   audioplayer1.open(
-//     Audio(
-//       "assets/audios/country.mp3",
-//       metas: Metas(
-//         title: "Country",
-//         artist: "Florent Champigny",
-//         album: "CountryAlbum",
-//         image: MetasImage.asset(
-//             "assets/images/country.jpg"), //can be MetasImage.network
-//       ),
-//     ),
-//     autoStart: true,
-//     showNotification: true,
-//   );
-
-//   audioplayer1.play();
-// }

@@ -1,5 +1,4 @@
-
-
+import 'package:assets_audio_player/assets_audio_player.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:grey_wall/audio.dart';
@@ -25,26 +24,30 @@ class songwidget extends StatefulWidget {
     this.isfav = false,
     this.index = 0,
     this.favorites,
-     required this.song,
+    required this.song,
+    this.removeFav,
+    required this.audioList,
   }) : super(key: key);
 
   final QueryArtworkWidget? qrwdgt;
   final String songName;
   final String artistName;
-  final List<FavoritesEntity>? favorites;
-   final SongModel song;
+
+  final SongModel song;
   final bool isPlaylist;
   final bool isfav;
   final bool isInFav;
   final int index;
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final List<FavoritesEntity>? favorites;
+  final List<Audio> audioList;
+  final VoidCallback? removeFav;
 
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _textEditingController = TextEditingController();
   Future<void> showInformationDialog(BuildContext context) async {
     return await showDialog(
         context: context,
         builder: (context) {
-          bool isChecked = false;
           return StatefulBuilder(builder: (context, setState) {
             return AlertDialog(
               content: Form(
@@ -144,11 +147,25 @@ class _songwidgetState extends State<songwidget> {
       child: Row(
         children: [
           GestureDetector(
-            onTap: () {
-              print("999");
-              audioplayer1.playlistPlayAtIndex(widget.index);
-              Navigator.of(context).push(
-                  MaterialPageRoute(builder: (context) => PlayerScreen()));
+            onTap: () async {
+              // audioplayer1.dispose();
+              for (var audio in widget.audioList) {
+                print(
+                    "name is 11  ${audio.metas.title} and index to player is ${widget.index}");
+              }
+              audioplayer1
+                  .open(
+                      Playlist(
+                        audios: widget.audioList,
+                        startIndex: widget.index,
+                      ),
+                      autoStart: true,
+                      showNotification: true)
+                  .then((value) {
+                Navigator.of(context).push(
+                    MaterialPageRoute(builder: (context) => PlayerScreen()));
+              });
+              print("the index of music playing should be ${widget.index}");
             },
             child: Row(
               children: [
@@ -207,11 +224,9 @@ class _songwidgetState extends State<songwidget> {
                                 // setState(() {
                                 //   widget.isfav == !widget.isfav;
                                 // });
-                                widget.isfav
-                                    ? onPressedIsFav()
-                                    : onPressedIsNotFav();
+                                widget.isfav ? widget.removeFav!() : addFav();
 
-                                 Navigator.pop(context);
+                                Navigator.pop(context);
                               },
                               child: Text(
                                   widget.isfav
@@ -257,25 +272,12 @@ class _songwidgetState extends State<songwidget> {
 
   removeFromPlaylist() {}
 
-  onPressedIsFav() {
-    audioRoom1.deleteFrom(
-      RoomType.FAVORITES,
-      widget.favorites![widget.index].key,
-    );
-
-    FavoritesScreen();
-
-    Navigator.of(context).pop();
-  }
-
-  onPressedIsNotFav() {
+  addFav() {
     audioRoom1.addTo(
       RoomType.FAVORITES,
       widget.song.getMap.toFavoritesEntity(),
       ignoreDuplicate: false,
     );
     HomeScreen();
-
-    Navigator.of(context).pop();
   }
 }
