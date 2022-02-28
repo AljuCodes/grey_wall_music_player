@@ -1,8 +1,6 @@
 import 'package:assets_audio_player/assets_audio_player.dart';
 import 'package:flutter/material.dart';
-import 'package:grey_wall/audio.dart';
 import 'package:grey_wall/main.dart';
-import 'package:grey_wall/models/boxmodels.dart';
 import 'package:grey_wall/widgets/song_widget.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:on_audio_room/on_audio_room.dart';
@@ -23,6 +21,11 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Favorites'),
+        actions: [IconButton(onPressed: (){
+          setState(() {
+            
+          });
+        }, icon: Icon(Icons.refresh))],
       ),
       body: SingleChildScrollView(
           child: Column(
@@ -36,11 +39,12 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
               ),
               builder: (context, item) {
                 if (item.data == null) return CircularProgressIndicator();
-                if (item.data!.isEmpty) return Text("No data found");
+                if (item.data!.isEmpty) return Center(child: Text("No data found"));
                 List<FavoritesEntity> favorites = item.data!;
                 List<Audio> audioList = [];
                 for(var favorite in favorites ){
-                 audioList.add(Audio.file(favorite.lastData,metas: Metas(artist: favorite.artist,title: favorite.title,id: favorite.id.toString()))); 
+                 audioList.add(Audio.file(favorite.lastData,metas: Metas(artist:
+                  favorite.artist,title: favorite.title,id: favorite.id.toString()))); 
                 }
                 SongModel ll = SongModel({});
                 return ListView.builder(

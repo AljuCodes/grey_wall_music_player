@@ -1,7 +1,8 @@
-
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:assets_audio_player/assets_audio_player.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 import 'package:grey_wall/models/boxmodels.dart';
 import 'package:hive_flutter/adapters.dart';
@@ -18,9 +19,8 @@ class HiveBoxController extends GetxController {
   }
 
   void adaperRegistrar() async {
-
     Hive.registerAdapter(SongBoxModelAdapter());
-    
+
     print("All boxes are opened successfully.");
   }
 
@@ -34,7 +34,7 @@ class HiveBoxController extends GetxController {
       sortType: SongSortType.DISPLAY_NAME,
       orderType: OrderType.ASC_OR_SMALLER,
     );
-    
+
     for (SongModel song in fetchedSongs) {
       if (song.fileExtension == 'mp3' ||
           song.fileExtension == 'opus' &&
@@ -43,7 +43,7 @@ class HiveBoxController extends GetxController {
         if (!getSongBox().containsKey(song.id)) {
           Uint8List? art =
               await OnAudioQuery().queryArtwork(song.id, ArtworkType.AUDIO);
-              
+
           getSongBox().put(
               song.id,
               SongBoxModel(
@@ -56,4 +56,5 @@ class HiveBoxController extends GetxController {
       }
     }
   }
+
 }

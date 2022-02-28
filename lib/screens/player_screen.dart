@@ -5,11 +5,15 @@ import 'package:grey_wall/audio.dart';
 import 'package:grey_wall/main.dart';
 import 'package:grey_wall/screens/home_screen.dart';
 import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
+import 'package:grey_wall/common.dart';
+import 'package:grey_wall/temp.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:on_audio_room/on_audio_room.dart';
 
 class PlayerScreen extends StatefulWidget {
-  PlayerScreen();
+  PlayerScreen({this.index = 0, this.lsSongModlel});
+  int index;
+  List<SongModel>? lsSongModlel;
   bool isFav = false;
   bool jj(PlayingAudio playingAudio) {
     OnAudioRoom()
@@ -109,43 +113,53 @@ class _PlayerScreenState extends State<PlayerScreen> {
                       ),
                       Row(
                         children: [
-                          IconButton(
-                            onPressed: () {},
-                            icon: Icon(
-                              Icons.playlist_add,
-                            ),
-                          ),
                           audioplayer1.builderRealtimePlayingInfos(builder:
                               (context, RealtimePlayingInfos? currentinfo) {
+                            var x = currentinfo!.current!.index;
                             if (currentinfo == null) {
                               return Text("sorry");
                             }
-                            return IconButton(
-                              onPressed: () async {
-                                var playingAudio = playing.audio;
-                                widget.isFav
-                                    ? removeFav(playingAudio)
-                                    : addFav(myAudio);
-                                print("onPress ${widget.isFav}");
-                                setState(() {});
-                                // ? removeFav()
-                                // :
-                              },
-                              icon: Icon(widget.isFav
-                                  ? Icons.favorite
-                                  : Icons.favorite_border),
+                            var playingAudio = playing.audio;
+                            return Row(
+                              children: [
+                                IconButton(
+                                  onPressed: () {
+                                    showInformationDialog(context,
+                                        playingAudio.audio.metas.title!);
+                                  },
+                                  icon: Icon(
+                                    Icons.playlist_add,
+                                  ),
+                                ),
+                                IconButton(
+                                  onPressed: () async {
+                                    widget.isFav
+                                        ? removeFav(playingAudio)
+                                        : addFav(myAudio);
+                                    print("onPress ${widget.isFav}");
+                                    setState(() {});
+                                    // ? removeFav()
+                                    // :
+                                  },
+                                  icon: Icon(widget.isFav
+                                      ? Icons.favorite
+                                      : Icons.favorite_border),
+                                ),
+                              ],
                             );
                           }),
                         ],
                       ),
                     ],
                   ),
-
-                  Text(
-                    myAudio.audio.metas.artist!,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w200,
-                      fontSize: 21,
+                  Container(
+                    width: 150,
+                    child: Text(
+                      myAudio.audio.metas.artist!,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w400,
+                        fontSize: 21,
+                      ),
                     ),
                   ),
                   const SizedBox(

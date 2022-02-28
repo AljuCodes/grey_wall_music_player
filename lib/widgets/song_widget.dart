@@ -2,6 +2,7 @@ import 'package:assets_audio_player/assets_audio_player.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:grey_wall/audio.dart';
+import 'package:grey_wall/controller/permission_controller.dart';
 import 'package:grey_wall/main.dart';
 import 'package:grey_wall/models/boxmodels.dart';
 import 'package:grey_wall/screens/details_screen/albums_details_screen.dart';
@@ -10,6 +11,8 @@ import 'package:grey_wall/screens/home_screen.dart';
 import 'package:grey_wall/screens/player_screen.dart';
 import 'package:grey_wall/screens/playlist_screen.dart';
 import 'package:grey_wall/tab_view.dart';
+import 'package:grey_wall/common.dart';
+import 'package:grey_wall/temp.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:on_audio_room/on_audio_room.dart';
 
@@ -26,6 +29,7 @@ class songwidget extends StatefulWidget {
     this.favorites,
     required this.song,
     this.removeFav,
+    this.removeSong,
     required this.audioList,
   }) : super(key: key);
 
@@ -41,7 +45,7 @@ class songwidget extends StatefulWidget {
   final List<FavoritesEntity>? favorites;
   final List<Audio> audioList;
   final VoidCallback? removeFav;
-
+  final VoidCallback? removeSong;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _textEditingController = TextEditingController();
   Future<void> showInformationDialog(BuildContext context) async {
@@ -93,47 +97,7 @@ class songwidget extends StatefulWidget {
 class _songwidgetState extends State<songwidget> {
   @override
   Widget build(BuildContext context) {
-    Future<void> _askedToLead() async {
-      await showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return SimpleDialog(
-              title: const Text('Select a Playlist'),
-              children: <Widget>[
-                SimpleDialogOption(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: const Text('Tamil'),
-                ),
-                SimpleDialogOption(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: const Text('South'),
-                ),
-                SimpleDialogOption(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: const Text('Rock'),
-                ),
-                SimpleDialogOption(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: const Text('pop'),
-                ),
-                SimpleDialogOption(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: const Text('Create new playlist'),
-                ),
-              ],
-            );
-          });
-    }
+    Future<void> _askedToLead() async {}
 
     final width = MediaQuery.of(context).size.width;
 
@@ -153,6 +117,9 @@ class _songwidgetState extends State<songwidget> {
                 print(
                     "name is 11  ${audio.metas.title} and index to player is ${widget.index}");
               }
+              print(
+                  "11 the song to be played is ${widget.audioList[widget.index]}");
+              print("333 in song ${permissionCtrl.getNotification()}");
               audioplayer1
                   .open(
                       Playlist(
@@ -160,6 +127,10 @@ class _songwidgetState extends State<songwidget> {
                         startIndex: widget.index,
                       ),
                       autoStart: true,
+                      notificationSettings: const NotificationSettings(
+                        stopEnabled: false,
+                        seekBarEnabled: true,
+                      ),
                       showNotification: true)
                   .then((value) {
                 Navigator.of(context).push(
@@ -192,15 +163,19 @@ class _songwidgetState extends State<songwidget> {
                     ),
                     Container(
                       width: 200,
-                      height: 25,
+                      height: 18,
                       child: Text(
                         widget.songName,
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ),
-                    Text(
-                      widget.artistName,
-                      style: const TextStyle(fontWeight: FontWeight.w300),
+                    Container(
+                      width: 200,
+                      height: 18,
+                      child: Text(
+                        widget.artistName,
+                        style: const TextStyle(fontWeight: FontWeight.w400),
+                      ),
                     ),
                   ],
                 ),
@@ -225,7 +200,9 @@ class _songwidgetState extends State<songwidget> {
                                 //   widget.isfav == !widget.isfav;
                                 // });
                                 widget.isfav ? widget.removeFav!() : addFav();
-
+                                widget.isPlaylist
+                                    ? widget.removeSong!()
+                                    : addSong();
                                 Navigator.pop(context);
                               },
                               child: Text(
@@ -243,7 +220,11 @@ class _songwidgetState extends State<songwidget> {
                             ),
                             TextButton(
                               onPressed: () {
-                                _askedToLead();
+                                // _askedToLead();
+                                widget.isPlaylist
+                                    ? widget.removeSong!()
+                                    : showInformationDialog(
+                                        context, widget.songName);
                                 // Navigator.of(context).pop();
                               },
                               child: Text(
@@ -278,6 +259,16 @@ class _songwidgetState extends State<songwidget> {
       widget.song.getMap.toFavoritesEntity(),
       ignoreDuplicate: false,
     );
+    HomeScreen();
+  }
+
+  addSong() {
+    // audioRoom1.addTo(
+    //   RoomType.PLAYLIST,
+    //   widget.song.getMap.toFavoritesEntity(),
+    //   ignoreDuplicate: false,
+    //   playlistKey: widget.,
+    // );
     HomeScreen();
   }
 }

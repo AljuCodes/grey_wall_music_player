@@ -8,16 +8,25 @@ import 'package:on_audio_query/on_audio_query.dart';
 
 class PermissionController extends GetxController {
   bool permissionStatus = false;
+  bool notification = false;
   GetStorage storage = GetStorage();
   @override
   void onInit() {
+
     // TODO: implement onInit
+
     permissionStatus = storage.read('permission') ?? false;
+    notification = storage.read("notification" )??false;
     super.onInit();
   }
+    Future<void> getNotificationStatus() async {
+    notification= permissionCtrl.storage.read('notification')??true;
+  }
 
-  Future<void> getPermissionStatus() async{
+  Future<void> getPermissionStatus({VoidCallback? fnn}) async{
+
     if(permissionStatus){
+      fnn==null?null:fnn();
       hiveCtrl.fetchAllsongs();
     }else{
       await askPermission();
@@ -29,16 +38,28 @@ class PermissionController extends GetxController {
       bool currentStatus = await OnAudioQuery().permissionsStatus();
       if(currentStatus){
         storage.write('permission', true);
+
         hiveCtrl.fetchAllsongs();
       }else{
         bool nowStatus = await OnAudioQuery().permissionsRequest();
         if(nowStatus){
           storage.write('permission', true);
+
           hiveCtrl.fetchAllsongs();
         }else{
           storage.write('permission', false);
+           
         }
       }
     }
   }
+bool getNotification(){
+  return notification;
+}
+bool changeprmsn(bool value){
+  notification = value;
+  storage.write("notification", value);
+  return notification;
+
+}
 }

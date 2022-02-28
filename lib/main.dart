@@ -5,20 +5,25 @@ import 'package:get/get.dart';
 import 'package:grey_wall/controller/hive_controller.dart';
 import 'package:grey_wall/controller/permission_controller.dart';
 import 'package:grey_wall/controller/player_controller.dart';
+import 'package:grey_wall/screens/splash_screens.dart';
 import 'package:grey_wall/tab_view.dart';
 import 'package:on_audio_room/on_audio_room.dart';
- final hiveCtrl = Get.put(HiveBoxController());
- final permissionCtrl = Get.put(PermissionController());
- final playerCtrl = Get.put(PlayerController());
-       final OnAudioRoom audioRoom1 = OnAudioRoom();
-void main() async{
-WidgetsFlutterBinding.ensureInitialized();
-await hiveCtrl.boxInitiliaser();
-await GetStorage.init();
-await permissionCtrl.getPermissionStatus();
-await playerCtrl.getNotificationStatus();
-await playerCtrl.initializeInitialPlaylist();
- await OnAudioRoom().initRoom(RoomType.FAVORITES);
+
+final hiveCtrl = Get.put(HiveBoxController());
+final permissionCtrl = Get.put(PermissionController());
+//  final playerCtrl = Get.put(PlayerController());
+final OnAudioRoom audioRoom1 = OnAudioRoom();
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await hiveCtrl.boxInitiliaser();
+  await GetStorage.init();
+  await permissionCtrl.getPermissionStatus();
+
+  await permissionCtrl.getNotificationStatus();
+// await playerCtrl.initializeInitialPlaylist();
+  await OnAudioRoom().initRoom();
+//  await OnAudioRoom().initRoom(RoomType.FAVORITES,);
+
   runApp(const MyApp());
 }
 
@@ -34,22 +39,20 @@ class MyApp extends StatelessWidget {
         // primarySwatch: Colors.grey,
         primaryColor: Colors.black,
         textButtonTheme: TextButtonThemeData(
-            style: ButtonStyle(
-              foregroundColor: MaterialStateProperty.all<Color>(Colors.black),
-                    overlayColor: MaterialStateProperty.all<Color>(Colors.grey),
-                  ),
-        )
-   ,     appBarTheme: AppBarTheme(
-     color: Colors.black,
-  ),
+          style: ButtonStyle(
+            foregroundColor: MaterialStateProperty.all<Color>(Colors.black),
+            overlayColor: MaterialStateProperty.all<Color>(Colors.grey),
+          ),
+        ),
+        appBarTheme: AppBarTheme(
+          color: Colors.black,
+        ),
         textTheme: GoogleFonts.poppinsTextTheme(
           Theme.of(context)
               .textTheme, // If this is not set, then ThemeData.light().textTheme is used.
         ),
       ),
-        home:
-      TabContainerBottom()  ,
-       
+      home:SplashScreen(),
     );
   }
 }
