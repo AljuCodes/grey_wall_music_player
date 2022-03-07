@@ -1,18 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:grey_wall/audio.dart';
-import 'package:grey_wall/controller/permission_controller.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:grey_wall/logic/notify_bloc/notify_bloc.dart';
+import 'package:grey_wall/logic/song_bloc/songbloc_bloc.dart';
 import 'package:grey_wall/main.dart';
 
-class MoreScreen extends StatefulWidget {
+class MoreScreen extends StatelessWidget {
   const MoreScreen({Key? key}) : super(key: key);
 
   @override
-  State<MoreScreen> createState() => _MoreScreenState();
-}
-
-class _MoreScreenState extends State<MoreScreen> {
-  @override
   Widget build(BuildContext context) {
+    BlocProvider.of<NotifyBloc>(context).add(NotifyEvent.load());
     print("333 build more ${permissionCtrl.getNotification()}");
     return Scaffold(
       appBar: AppBar(
@@ -28,26 +25,42 @@ class _MoreScreenState extends State<MoreScreen> {
             ),
             Container(
               margin: const EdgeInsets.only(left: 20),
+              child: const Text("Settings"),
+            ),
+            ListTile(
+              leading: const Icon(
+                Icons.notifications,
+                size: 30,
+              ),
+              title: const Text("Notifications"),
+              trailing: BlocBuilder<NotifyBloc, bool>(
+                builder: (context, state) {
+                  return Switch(
+                    value: state,
+                    onChanged: (value) {
+                      permissionCtrl.changeNotify(value);
+                      BlocProvider.of<NotifyBloc>(context)
+                          .add(NotifyEvent.load());
+                    },
+                    activeColor: Theme.of(context).primaryColor,
+                  );
+                },
+              ),
+            ),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20),
+              child: Divider(
+                thickness: 1,
+                color: Colors.grey,
+              ),
+            ),
+            const SizedBox(
+              height: 20,
+            ),
+            Container(
+              margin: const EdgeInsets.only(left: 20),
               child: const Text("Features"),
             ),
-            // ListTile(
-            //   leading: const Icon(
-            //     Icons.notifications,
-            //     size: 30,
-            //   ),
-            //   title: const Text("Allow Notifications"),
-            //   trailing: Switch(
-            //     value: permissionCtrl.getNotification(),
-            //     onChanged: (value) {
-            //       setState(() {
-            //         print(
-            //             "333 in onchanged ${permissionCtrl.getNotification()}");
-            //         permissionCtrl.changeprmsn(value);
-            //       });
-            //     },
-            //     activeColor: Colors.black,
-            //   ),
-            // ),
             const ListTile(
               leading: const Icon(
                 Icons.access_time,
@@ -97,7 +110,22 @@ class _MoreScreenState extends State<MoreScreen> {
               child: const Text("General"),
             ),
             InkWell(
-              onTap: _showAbout,
+              onTap: () {
+                showDialog(
+                  context: context,
+                  builder: (context) {
+                    return AboutDialog(
+                      applicationName: "Grey Wall",
+                      applicationVersion: "Version 1.0.0",
+                      applicationIcon: Image.asset(
+                        'assets/images/icon.jpeg',
+                        width: 60.0,
+                        height: 60.0,
+                      ),
+                    );
+                  },
+                );
+              },
               child: const ListTile(
                 leading: Icon(
                   Icons.account_circle,
@@ -117,23 +145,6 @@ class _MoreScreenState extends State<MoreScreen> {
           ],
         ),
       ),
-    );
-  }
-
-  Future<dynamic> _showAbout() {
-    return showDialog(
-      context: context,
-      builder: (context) {
-        return AboutDialog(
-          applicationName: "Music Player",
-          applicationVersion: "Version 1.0.0",
-          applicationIcon: Image.asset(
-            'assets/images/icon.jpg',
-            width: 60.0,
-            height: 60.0,
-          ),
-        );
-      },
     );
   }
 }

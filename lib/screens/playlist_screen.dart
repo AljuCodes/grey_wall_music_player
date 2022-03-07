@@ -1,26 +1,18 @@
 import 'package:assets_audio_player/assets_audio_player.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:grey_wall/logic/playlist_bloc/playlist_bloc.dart';
+import 'package:grey_wall/logic/playlist_song_bloc/playlistsong_bloc.dart';
 import 'package:grey_wall/main.dart';
+
 import 'package:grey_wall/screens/details_screen/playlist_detail_screen.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:on_audio_room/on_audio_room.dart';
 
 final OnAudioQuery1 = OnAudioQuery();
 
-class playlistScreen extends StatefulWidget {
+class playlistScreen extends StatelessWidget {
   playlistScreen({Key? key}) : super(key: key);
-
-  @override
-  State<playlistScreen> createState() => _playlistScreenState();
-}
-
-class _playlistScreenState extends State<playlistScreen> {
-  @override
-  void initState() {
-    // TODO: implement initState
-    _textEditingController.clear();
-    super.initState();
-  }
 
   List<PlaylistEntity> myProduct = [];
 
@@ -30,13 +22,12 @@ class _playlistScreenState extends State<playlistScreen> {
 
   Future<void> showInformationDialog(
     BuildContext context,
-    VoidCallback fn,
   ) async {
     return await showDialog(
         context: context,
         builder: (context) {
           bool isChecked = false;
-          return StatefulBuilder(builder: (context, setState) {
+          return StatefulBuilder(builder: (context, _) {
             return AlertDialog(
               content: Form(
                   key: _formKey,
@@ -50,8 +41,7 @@ class _playlistScreenState extends State<playlistScreen> {
                           if (value1 == null || value1.isEmpty) {
                             s = "Enter a name";
                           }
-                          OnAudioRoom()
-                              .createPlaylist(value1!, ignoreDuplicate: false);
+
                           return s;
                         },
                         decoration:
@@ -62,14 +52,19 @@ class _playlistScreenState extends State<playlistScreen> {
               title: const Text('Create new playlist'),
               actions: <Widget>[
                 TextButton(
-                  onPressed: () {
+                  onPressed: () async {
                     if (_formKey.currentState!.validate()) {
                       // Do something like updating SharedPreferences or User Settings etc.
-
-                      OnAudioQuery1.createPlaylist(_textEditingController.text);
-                      _textEditingController.clear();
-                      fn();
-                      Navigator.of(context).pop();
+                      if (_textEditingController.text.isNotEmpty) {
+                        OnAudioRoom().createPlaylist(
+                            _textEditingController.text,
+                            ignoreDuplicate: false);
+                        _textEditingController.clear();
+                        await hiveCtrl.intializePlaylist();
+                        BlocProvider.of<PlaylistBloc>(context)
+                            .add(PlaylistEvent.load());
+                        Navigator.of(context).pop();
+                      }
                     }
                   },
                   child: const Text('OK   '),
@@ -80,16 +75,9 @@ class _playlistScreenState extends State<playlistScreen> {
         });
   }
 
-  fn989() {
-    @override
-    void setState(VoidCallback fn) {
-      // TODO: implement setState
-      super.setState(fn);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
+    BlocProvider.of<PlaylistBloc>(context).add(PlaylistEvent.load());
     final height = MediaQuery.of(context).size.height;
     final width = MediaQuery.of(context).size.width;
     return Scaffold(
@@ -102,9 +90,6 @@ class _playlistScreenState extends State<playlistScreen> {
                 onTap: () async {
                   await showInformationDialog(
                     context,
-                    () {
-                      setState(() {});
-                    },
                   );
                 },
                 child: Stack(children: [
@@ -141,99 +126,106 @@ class _playlistScreenState extends State<playlistScreen> {
             ),
           ],
         ),
-        body: FutureBuilder<List<PlaylistEntity>>(
-            future: OnAudioRoom().queryPlaylists(),
-            builder: ((context, item) {
-              if (item.data == null) return CircularProgressIndicator();
-
-              final myProduct = item.data;
-              print("868 is ${myProduct.toString()}");
-              // OnAudioRoom().deletePlaylist(77153148);
-              return Stack(
-                children: [
-                  Container(
-                    height: height * .81,
-                    padding: const EdgeInsets.symmetric(horizontal: 18),
-                    child: GridView.builder(
-                      gridDelegate:
-                          const SliverGridDelegateWithMaxCrossAxisExtent(
-                        maxCrossAxisExtent: 280,
-                        childAspectRatio: 1 / 1.4,
-                        crossAxisSpacing: 27,
-                      ),
-                      itemCount: myProduct!.length,
-                      itemBuilder: (BuildContext ctx, index) {
-                        return InkWell(
-                          onTap: (() => Navigator.of(context).pushReplacement(
-                                MaterialPageRoute(
-                                  builder: (context) => PlaylistDetailScreen(
-                                      myProduct[index].playlistName,
-                                      myProduct[index].key,
-                                      fn989),
-                                ),
-                              )),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Container(
-                                margin: const EdgeInsets.only(top: 5),
-                                height: height * .21,
-                                width: height * .21,
-                                decoration: const BoxDecoration(
-                                    color: const Color(0xffc4c5c5),
-                                    borderRadius: const BorderRadius.all(
-                                        Radius.circular(18))),
-                                child: const Icon(
-                                  Icons.music_note,
-                                  size: 50,
-                                ),
-                              ),
-                              // The Text
-                              Container(
-                                margin: const EdgeInsets.only(left: 13),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          myProduct[index].playlistName,
-                                          style: const TextStyle(
-                                              fontWeight: FontWeight.bold),
-                                        ),
-                                        Text(
-                                          "Total ${myProduct[index].playlistSongs.length} songs",
-                                          style: const TextStyle(fontSize: 12),
-                                        ),
-                                      ],
-                                    ),
-                                    IconButton(
-                                        onPressed: () {
-                                          showInformationDialog1(
-                                              context, myProduct[index].key);
-                                          setState(() {});
-                                        },
-                                        icon: Icon(
-                                          Icons.delete,
-                                          size: 20,
-                                          color: Color.fromARGB(
-                                              255, 145, 145, 145),
-                                        ))
-                                  ],
-                                ),
-                              )
-                            ],
+        body: BlocBuilder<PlaylistBloc, List<PlaylistEntity>>(
+            builder: ((context, state) {
+          if (state == null) return CircularProgressIndicator();
+          if (state.isEmpty)
+            return Center(
+              child: Text("No Playlist"),
+            );
+          final myProduct = state;
+          print("868 is ${myProduct.toString()}");
+          // OnAudioRoom().deletePlaylist(77153148);
+          return Stack(
+            children: [
+              Container(
+                height: height * .81,
+                padding: const EdgeInsets.symmetric(horizontal: 18),
+                child: GridView.builder(
+                  gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                    maxCrossAxisExtent: 280,
+                    childAspectRatio: 1 / 1.4,
+                    crossAxisSpacing: 27,
+                  ),
+                  itemCount: myProduct.length,
+                  itemBuilder: (BuildContext ctx, index) {
+                    return InkWell(
+                      onTap: () async {
+                        await hiveCtrl
+                            .intializePlaylistSongs(myProduct[index].key);
+                        BlocProvider.of<PlaylistsongBloc>(context)
+                            .add(PlaylistsongEvent.load());
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => PlaylistDetailScreen(
+                                myProduct[index].playlistName,
+                                myProduct[index].key),
                           ),
                         );
                       },
-                    ),
-                  ),
-                ],
-              );
-            })));
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            margin: const EdgeInsets.only(top: 5),
+                            height: height * .21,
+                            width: height * .21,
+                            decoration: const BoxDecoration(
+                                color: const Color(0xffc4c5c5),
+                                borderRadius: const BorderRadius.all(
+                                    Radius.circular(18))),
+                            child: const Icon(
+                              Icons.music_note,
+                              size: 50,
+                            ),
+                          ),
+                          // The Text
+                          Container(
+                            margin: const EdgeInsets.only(left: 13),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Container(
+                                      width: 100,
+                                      height: 20,
+                                      child: Text(
+                                        myProduct[index].playlistName,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                                    Text(
+                                      "Total ${myProduct[index].playlistSongs.length} songs",
+                                      style: const TextStyle(fontSize: 12),
+                                    ),
+                                  ],
+                                ),
+                                IconButton(
+                                    onPressed: () {
+                                      showInformationDialog1(
+                                          context, myProduct[index].key);
+                                    },
+                                    icon: Icon(
+                                      Icons.delete,
+                                      size: 20,
+                                      color: Color.fromARGB(255, 145, 145, 145),
+                                    ))
+                              ],
+                            ),
+                          )
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          );
+        })));
   }
 }
 
@@ -246,7 +238,7 @@ Future<void> showInformationDialog1(BuildContext context, int key) async {
       context: context,
       builder: (context) {
         bool isChecked = false;
-        return StatefulBuilder(builder: (context, setState) {
+        return StatefulBuilder(builder: (context, _) {
           return AlertDialog(
             content: Text("Do you really want to delete this playlist"),
             actions: <Widget>[
@@ -255,8 +247,11 @@ Future<void> showInformationDialog1(BuildContext context, int key) async {
                   'YES',
                   style: TextStyle(color: Colors.redAccent),
                 ),
-                onTap: () {
+                onTap: () async {
                   OnAudioRoom().deletePlaylist(key);
+                  await hiveCtrl.intializePlaylist();
+                  BlocProvider.of<PlaylistBloc>(context)
+                      .add(PlaylistEvent.load());
                   Navigator.of(context).pop();
                 },
               ),

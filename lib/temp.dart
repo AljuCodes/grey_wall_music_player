@@ -1,42 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
 import 'package:grey_wall/common.dart';
+import 'package:grey_wall/logic/playlist_bloc/playlist_bloc.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:on_audio_room/on_audio_room.dart';
 
-// void main(List<String> args) {
-//   runApp(new MaterialApp(
-//     title: "My App",
-//     home: new StatefulDialog(),
-//   ));
-// }
-
-// class StatefulDialog extends StatefulWidget {
-//   StatefulDialog(this.context,this.title);
-//   BuildContext context;
-//   String title;
-//   @override
-//   _StatefulDialogState createState() => _StatefulDialogState();
-// }
-
-// class _StatefulDialogState extends State<StatefulDialog> {
-//   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-
-//   final TextEditingController _textEditingController = TextEditingController();
-
-Future<void> showInformationDialog(BuildContext context, String title) async {
+Future<void> showInformationDialog4(BuildContext context, String title) async {
   return await showDialog(
       context: context,
       builder: (ctx) {
-        bool isChecked = false;
-        return StatefulBuilder(builder: (context, setState) {
+        return StatefulBuilder(builder: (context, _) {
           return SimpleDialog(
             children: [
               SimpleDialogOption(
                 onPressed: () {
                   // Navigator.pop(context);
-                  createPlaylist(ctx, context, setState);
+                  createPlaylist(ctx, context,);
                 },
                 child: Text('New Playlist'),
               ),
@@ -60,44 +40,41 @@ Future<void> showInformationDialog(BuildContext context, String title) async {
                           sM = song;
                         }
                       }
-                      return FutureBuilder<List<PlaylistEntity>>(
-                          future: OnAudioRoom().queryPlaylists(),
-                          builder: (context, item) {
-                            //final x = item.data[0].id
-                            if (item.data == null)
-                              return Center(
-                                child: Text('Nothing Found'),
-                              );
 
-                            return ListView.separated(
-                              shrinkWrap: true,
-                              itemCount: item.data!.length,
-                              itemBuilder: (ctx, index) => GestureDetector(
-                                  onTap: () async {
-                                    await OnAudioRoom().addTo(RoomType.PLAYLIST,
+                      return BlocBuilder<PlaylistBloc, List<PlaylistEntity>>(
+                          builder: (context, item) {
+                        //final x = item.data[0].id
+                        if (item == null)
+                          return Center(
+                            child: Text('Nothing Found'),
+                          );
+
+                        return ListView.separated(
+                          shrinkWrap: true,
+                          itemCount: item.length,
+                          itemBuilder: (ctx, index) => GestureDetector(
+                              onTap: () async {
+                                await OnAudioRoom()
+                                    .addTo(RoomType.PLAYLIST,
                                         sM.getMap.toFavoritesEntity(),
-                                        playlistKey: item.data![index].key,
-                                        ignoreDuplicate: false).then((value) {
-                                          // Get.snackbar("music added", "succesfully");
-                                          if(value!=0){
-                                       
-                                        }});
-                                        
-                                    Navigator.pop(ctx);
-                                    //print(item.data![index].dateAdded);
-                                    // final x = _audioQuery.addToPlaylist(
-                                    //     item.data![index].id, id);
-                                    // print(x);
-                                    //_audioQuery.queryAudiosFrom();
-                                  },
-                                  child: Text(
-                                    item.data![index].playlistName,
-                                  )),
-                              separatorBuilder: (ctx, index) => SizedBox(
-                                height: 18,
-                              ),
-                            );
-                          });
+                                        playlistKey: item[index].key,
+                                        ignoreDuplicate: false)
+                                    .then((value) {
+                                
+                                  if (value != 0) {}
+                                });
+
+                                Navigator.pop(ctx);
+                       
+                              },
+                              child: Text(
+                                item[index].playlistName,
+                              )),
+                          separatorBuilder: (ctx, index) => SizedBox(
+                            height: 18,
+                          ),
+                        );
+                      });
                     }),
               ))
             ],

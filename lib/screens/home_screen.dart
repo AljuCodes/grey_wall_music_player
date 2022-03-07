@@ -2,50 +2,23 @@ import 'package:assets_audio_player/assets_audio_player.dart';
 import 'package:flutter/material.dart';
 import 'package:grey_wall/audio.dart';
 import 'package:grey_wall/main.dart';
-import 'package:grey_wall/models/boxmodels.dart';
 import 'package:grey_wall/screens/more_screen.dart';
 import 'package:grey_wall/screens/player_screen.dart';
 import 'package:grey_wall/screens/search_songs_screen.dart';
 import 'package:grey_wall/widgets/song_widget.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 
-class HomeScreen extends StatefulWidget {
-  @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
+class HomeScreen extends StatelessWidget {
   QueryArtworkWidget? qrwdgt;
 
   String? songName;
 
   String? artistName;
 
-  // void lll() async {
-  //   print("lll is working");
-  //   List<SongModel> fetchedSongs = await OnAudioQuery().querySongs(
-  //     sortType: SongSortType.DISPLAY_NAME,
-  //     orderType: OrderType.ASC_OR_SMALLER,
-  //   );
-  //   print("fetched song is ${fetchedSongs.toList()}");
-  //   for (SongModel song in fetchedSongs) {
-  //     print(
-  //         "song title is ${song.title} song artist is ${song.artist} song id is ${song.id} ");
-  //   }
-  // }
-
-  // something.map((e) => print(e))
-  // for(var song in something){
-  //   print(song);
-  // }
-
   @override
   Widget build(BuildContext context) {
-   
-    //  fn();
-    // lll();
-
+    hiveCtrl.intializePlaylist();
+    hiveCtrl.initializeFavorite();
     final height = MediaQuery.of(context).size.height;
     final width = MediaQuery.of(context).size.width;
     return FutureBuilder<bool>(
@@ -60,18 +33,16 @@ class _HomeScreenState extends State<HomeScreen> {
                 FloatingActionButtonLocation.centerDocked,
             floatingActionButton: audioplayer1.builderRealtimePlayingInfos(
                 builder: (context, RealtimePlayingInfos? currentinfo) {
-              var x = currentinfo!.current!.index;
+              // var x = currentinfo!.current!.index;
               if (currentinfo == null) {
                 return Container();
               }
               return Container(
-                // padding: EdgeInsets.all(25),
-                margin: const EdgeInsets.only (bottom: 10),
+                margin: const EdgeInsets.only(bottom: 10),
                 decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(20),
                     color: Colors.grey.shade700,
                     border: Border.all(color: Colors.black)),
-
                 width: width * .9,
                 height: 80,
                 child: Row(
@@ -110,8 +81,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               SizedBox(
                                 width: 30,
                               ),
-                              // skip previous
-                              // SizedBox(width: 20,),
+
                               Container(
                                   // margin: EdgeInsets.only(left:),
                                   height: 60,
@@ -154,19 +124,6 @@ class _HomeScreenState extends State<HomeScreen> {
                             ],
                           ),
                         ),
-                        // // play
-                        // Positioned(
-                        //   bottom: 11,
-                        //   child: Container(
-                        //     //  decoration: BoxDecoration(color: Colors.black),
-                        //     margin: EdgeInsets.only(
-                        //       left: width * .465,
-                        //     ),
-                        //     height: 50,
-                        //     width: 50,
-                        //     child: fn2(context),
-                        //   ),
-                        // ),
                       ],
                     ),
                   ],
@@ -190,7 +147,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           TextButton(
                             onPressed: () {
                               Navigator.of(context).push(MaterialPageRoute(
-                                  builder: (context) => const SearchScreen()));
+                                  builder: (context) => SearchScreen()));
                             },
                             child: Text("search songs",
                                 style: TextStyle(
@@ -228,10 +185,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   height: 700,
                   child: FutureBuilder<List<SongModel>>(
                     // Default values:
-                    future: OnAudioQuery().querySongs(
-                      sortType: SongSortType.DISPLAY_NAME,
-                      orderType: OrderType.ASC_OR_SMALLER,
-                    ),
+                    future: hiveCtrl.fetchAllsongs(),
                     builder: (context, item) {
                       // Loading content
                       if (item.data == null)
@@ -244,7 +198,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         itemCount: audioList.length,
                         itemBuilder: (context, index) {
                           print("11 ${audioList[index]}");
-                          return songwidget(
+                          return SongWidget(
                             audioList: audioList,
                             song: item.data![index],
                             artistName: item.data![index].artist!,

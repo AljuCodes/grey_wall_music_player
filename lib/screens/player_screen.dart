@@ -1,44 +1,23 @@
 import 'package:assets_audio_player/assets_audio_player.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
 import 'package:grey_wall/audio.dart';
+import 'package:grey_wall/logic/favorite_bloc/favorite_bloc.dart';
 import 'package:grey_wall/main.dart';
-import 'package:grey_wall/screens/home_screen.dart';
+
 import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
-import 'package:grey_wall/common.dart';
+
 import 'package:grey_wall/temp.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:on_audio_room/on_audio_room.dart';
 
-class PlayerScreen extends StatefulWidget {
+class PlayerScreen extends StatelessWidget {
   PlayerScreen({this.index = 0, this.lsSongModlel});
   int index;
   List<SongModel>? lsSongModlel;
-  bool isFav = false;
-  bool jj(PlayingAudio playingAudio) {
-    OnAudioRoom()
-        .queryFavorites(
-      limit: 50,
-      sortType: null,
-    )
-        .then((value) async {
-      for (var song in value) {
-        if (song.title == playingAudio.audio.metas.title) {
-          print(
-              "match found ${song.title} == ${playingAudio.audio.metas.title}");
-          isFav = await OnAudioRoom().checkIn(RoomType.FAVORITES, song.key);
-        }
-      }
-    });
-    return isFav;
-  }
 
-//int index;
-  @override
-  _PlayerScreenState createState() => _PlayerScreenState();
-}
 
-class _PlayerScreenState extends State<PlayerScreen> {
   @override
   Widget build(BuildContext context) {
     final height = MediaQuery.of(context).size.height;
@@ -57,8 +36,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
               }
 
               var myAudio = playing.audio;
-              widget.isFav = widget.jj(myAudio);
-              print("the isFav when building ${widget.isFav}");
+
               return Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -124,26 +102,36 @@ class _PlayerScreenState extends State<PlayerScreen> {
                               children: [
                                 IconButton(
                                   onPressed: () {
-                                    showInformationDialog(context,
+                                    showInformationDialog4(context,
                                         playingAudio.audio.metas.title!);
                                   },
                                   icon: Icon(
                                     Icons.playlist_add,
                                   ),
                                 ),
-                                IconButton(
-                                  onPressed: () async {
-                                    widget.isFav
-                                        ? removeFav(playingAudio)
-                                        : addFav(myAudio);
-                                    print("onPress ${widget.isFav}");
-                                    setState(() {});
-                                    // ? removeFav()
-                                    // :
+                                BlocBuilder<FavoriteBloc,
+                                    List<FavoritesEntity>>(
+                                  builder: (context, state) {
+                                    print("333 rebuilding favorite BLoc");
+                                    bool isFav1 = false;
+                                    for (var fav in state) {
+                                      if (fav.title ==
+                                          playingAudio.audio.metas.title) {
+                                        isFav1 = true;
+                                        break;
+                                      }
+                                    }
+                                    return IconButton(
+                                      onPressed: () async {
+                                        isFav1
+                                            ? removeFav(playingAudio,context)
+                                            : addFav(myAudio,context);
+                                      },
+                                      icon: Icon(isFav1
+                                          ? Icons.favorite
+                                          : Icons.favorite_border),
+                                    );
                                   },
-                                  icon: Icon(widget.isFav
-                                      ? Icons.favorite
-                                      : Icons.favorite_border),
                                 ),
                               ],
                             );
@@ -237,8 +225,11 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                   width: 60,
                                   child: Center(
                                       child: IconButton(
-                                    onPressed: () {
-                                      audioplayer1.previous();
+                                    onPressed: () async {
+                                      await audioplayer1.previous();
+
+                                      BlocProvider.of<FavoriteBloc>(context)
+                                          .add(FavoriteEvent.load());
                                     },
                                     icon: const Icon(
                                       Icons.skip_previous,
@@ -257,8 +248,11 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                   width: 60,
                                   child: Center(
                                       child: IconButton(
-                                    onPressed: () {
-                                      audioplayer1.next();
+                                    onPressed: () async {
+                                      await audioplayer1.next();
+
+                                      BlocProvider.of<FavoriteBloc>(context)
+                                          .add(FavoriteEvent.load());
                                     },
                                     icon: const Icon(
                                       Icons.skip_next,
@@ -308,7 +302,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
     );
   }
 
-  removeFav(dynamic playingAudio) {
+  removeFav(dynamic playingAudio,BuildContext context) {
     OnAudioRoom()
         .queryFavorites(
       limit: 50,
@@ -326,16 +320,17 @@ class _PlayerScreenState extends State<PlayerScreen> {
           )
               .then((value) {
             print("song isremoved= $value from the favorites");
-            setState(() {
-              widget.isFav = false;
-            });
+            if (value) {
+              hiveCtrl.initializeFavorite();
+              BlocProvider.of<FavoriteBloc>(context).add(FavoriteEvent.load());
+            }
           });
         }
       }
     });
   }
 
-  addFav(PlayingAudio myAudio) async {
+  addFav(PlayingAudio myAudio,BuildContext context) async {
     await OnAudioQuery()
         .querySongs(
       sortType: SongSortType.DISPLAY_NAME,
@@ -355,9 +350,8 @@ class _PlayerScreenState extends State<PlayerScreen> {
           )
               .then((value) {
             print("the song added to favorite");
-            setState(() {
-              widget.isFav = true;
-            });
+            hiveCtrl.initializeFavorite();
+            BlocProvider.of<FavoriteBloc>(context).add(FavoriteEvent.load());
           });
         }
       }

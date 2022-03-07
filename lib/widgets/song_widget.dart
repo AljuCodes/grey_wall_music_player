@@ -1,23 +1,22 @@
 import 'package:assets_audio_player/assets_audio_player.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:grey_wall/audio.dart';
-import 'package:grey_wall/controller/permission_controller.dart';
+import 'package:grey_wall/logic/favorite_bloc/favorite_bloc.dart';
+import 'package:grey_wall/logic/notify_bloc/notify_bloc.dart';
 import 'package:grey_wall/main.dart';
-import 'package:grey_wall/models/boxmodels.dart';
-import 'package:grey_wall/screens/details_screen/albums_details_screen.dart';
-import 'package:grey_wall/screens/favorites_screen.dart';
-import 'package:grey_wall/screens/home_screen.dart';
 import 'package:grey_wall/screens/player_screen.dart';
-import 'package:grey_wall/screens/playlist_screen.dart';
+
 import 'package:grey_wall/tab_view.dart';
-import 'package:grey_wall/common.dart';
+
 import 'package:grey_wall/temp.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:on_audio_room/on_audio_room.dart';
 
-class songwidget extends StatefulWidget {
-  songwidget({
+import '../screens/home_screen.dart';
+
+class SongWidget extends StatelessWidget {
+  SongWidget({
     Key? key,
     this.qrwdgt,
     this.songName = "Lonely",
@@ -48,57 +47,9 @@ class songwidget extends StatefulWidget {
   final VoidCallback? removeSong;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _textEditingController = TextEditingController();
-  Future<void> showInformationDialog(BuildContext context) async {
-    return await showDialog(
-        context: context,
-        builder: (context) {
-          return StatefulBuilder(builder: (context, setState) {
-            return AlertDialog(
-              content: Form(
-                  key: _formKey,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      TextFormField(
-                        controller: _textEditingController,
-                        validator: (value) {
-                          return value!.isNotEmpty ? null : "Enter any text";
-                        },
-                        decoration:
-                            const InputDecoration(hintText: "playlist Name"),
-                      ),
-                    ],
-                  )),
-              title: const Text('Create new playlist'),
-              actions: <Widget>[
-                TextButton(
-                  onPressed: () {
-                    if (_formKey.currentState!.validate()) {
-                      // Do something like updating SharedPreferences or User Settings etc.
-                      Navigator.of(context).pushReplacement(MaterialPageRoute(
-                          builder: (context) => TabContainerBottom(
-                                index1: 1,
-                              )));
-                    }
-                  },
-                  child: const Text('OK   '),
-                ),
-              ],
-            );
-          });
-        });
-  }
 
-  ssss() {}
-  @override
-  State<songwidget> createState() => _songwidgetState();
-}
-
-class _songwidgetState extends State<songwidget> {
   @override
   Widget build(BuildContext context) {
-    Future<void> _askedToLead() async {}
-
     final width = MediaQuery.of(context).size.width;
 
     return Container(
@@ -110,141 +61,136 @@ class _songwidgetState extends State<songwidget> {
           borderRadius: BorderRadius.all(Radius.circular(20))),
       child: Row(
         children: [
-          GestureDetector(
-            onTap: () async {
-              // audioplayer1.dispose();
-              for (var audio in widget.audioList) {
-                print(
-                    "name is 11  ${audio.metas.title} and index to player is ${widget.index}");
-              }
-              print(
-                  "11 the song to be played is ${widget.audioList[widget.index]}");
-              print("333 in song ${permissionCtrl.getNotification()}");
-              audioplayer1
-                  .open(
-                      Playlist(
-                        audios: widget.audioList,
-                        startIndex: widget.index,
-                      ),
-                      autoStart: true,
-                      notificationSettings: const NotificationSettings(
-                        stopEnabled: false,
-                        seekBarEnabled: true,
-                      ),
-                      showNotification: true)
-                  .then((value) {
-                Navigator.of(context).push(
-                    MaterialPageRoute(builder: (context) => PlayerScreen()));
-              });
-              print("the index of music playing should be ${widget.index}");
-            },
-            child: Row(
-              children: [
-                // the container of image of song
-                Container(
-                  margin: const EdgeInsets.only(left: 10),
-                  height: 77,
-                  width: 80,
-                  decoration: const BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.all(Radius.circular(18))),
-                  child: widget.qrwdgt ?? const Icon(Icons.music_note),
-                ),
-
-                SizedBox(
-                  width: 20,
-                ),
-
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+          BlocBuilder<NotifyBloc, bool>(
+            builder: (context, state) {
+              return GestureDetector(
+                onTap: () async {
+print("898 the notification is $state");
+                  audioplayer1
+                      .open(
+                          Playlist(
+                            audios: audioList,
+                            startIndex: index,
+                          ),
+                          autoStart: true,
+                          notificationSettings: const NotificationSettings(
+                            stopEnabled: false,
+                            seekBarEnabled: true,
+                          ),
+                          showNotification: state)
+                      .then((value) {
+                    Navigator.of(context).push(MaterialPageRoute(
+                        builder: (context) => PlayerScreen()));
+                  });
+                  print("the index of music playing should be ");
+                },
+                child: Row(
                   children: [
-                    const SizedBox(
-                      height: 23,
-                    ),
+                    // the container of image of song
                     Container(
-                      width: 200,
-                      height: 18,
-                      child: Text(
-                        widget.songName,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
+                      margin: const EdgeInsets.only(left: 10),
+                      height: 77,
+                      width: 80,
+                      decoration: const BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.all(Radius.circular(18))),
+                      child: qrwdgt ?? const Icon(Icons.music_note),
                     ),
-                    Container(
-                      width: 200,
-                      height: 18,
-                      child: Text(
-                        widget.artistName,
-                        style: const TextStyle(fontWeight: FontWeight.w400),
-                      ),
-                    ),
-                  ],
-                ),
 
-                Column(
-                  children: [
-                    const SizedBox(
-                      height: 18,
+                    SizedBox(
+                      width: 20,
                     ),
-                    PopupMenuButton<int>(
-                      padding: const EdgeInsets.all(0),
-                      enableFeedback: true,
-                      shape: const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(15))),
-                      itemBuilder: (context) => [
-                        PopupMenuItem(
-                            child: Column(
-                          children: [
-                            TextButton(
-                              onPressed: () {
-                                // setState(() {
-                                //   widget.isfav == !widget.isfav;
-                                // });
-                                widget.isfav ? widget.removeFav!() : addFav();
-                                widget.isPlaylist
-                                    ? widget.removeSong!()
-                                    : addSong();
-                                Navigator.pop(context);
-                              },
-                              child: Text(
-                                  widget.isfav
-                                      ? "remove from favorite"
-                                      : "add to favorite",
-                                  style: TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w500,
-                                      color: Theme.of(context).primaryColor)),
-                            ),
-                            const Divider(
-                              color: Colors.black,
-                              thickness: 2,
-                            ),
-                            TextButton(
-                              onPressed: () {
-                                // _askedToLead();
-                                widget.isPlaylist
-                                    ? widget.removeSong!()
-                                    : showInformationDialog(
-                                        context, widget.songName);
-                                // Navigator.of(context).pop();
-                              },
-                              child: Text(
-                                  widget.isPlaylist
-                                      ? "remove from the playlist"
-                                      : "add to playlist",
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.w500,
-                                      color: Theme.of(context).primaryColor)),
-                            ),
-                          ],
-                        ))
+
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(
+                          height: 23,
+                        ),
+                        Container(
+                          width: 200,
+                          height: 18,
+                          child: Text(
+                            songName,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        Container(
+                          width: 200,
+                          height: 18,
+                          child: Text(
+                            artistName,
+                            style: const TextStyle(fontWeight: FontWeight.w400),
+                          ),
+                        ),
                       ],
-                      color: Colors.white,
-                      iconSize: 30,
-                    )
+                    ),
+
+                    Column(
+                      children: [
+                        const SizedBox(
+                          height: 18,
+                        ),
+                        PopupMenuButton<int>(
+                          padding: const EdgeInsets.all(0),
+                          enableFeedback: true,
+                          shape: const RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(15))),
+                          itemBuilder: (context) => [
+                            PopupMenuItem(
+                                child: Column(
+                              children: [
+                                TextButton(
+                                  onPressed: () {
+                                    isfav ? removeFav!() : addFav(context);
+
+                                    Navigator.pop(context);
+                                  },
+                                  child: Text(
+                                      isfav
+                                          ? "remove from favorite"
+                                          : "add to favorite",
+                                      style: TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w500,
+                                          color:
+                                              Theme.of(context).primaryColor)),
+                                ),
+                                const Divider(
+                                  color: Colors.black,
+                                  thickness: 2,
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    // _askedToLead();
+                                    isPlaylist
+                                        ? removeSong!()
+                                        : showInformationDialog4(
+                                            context, songName);
+                                    // Navigator.of(context).pop();
+                                  },
+                                  child: Text(
+                                      isPlaylist
+                                          ? "remove from the playlist"
+                                          : "add to playlist",
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.w500,
+                                          color:
+                                              Theme.of(context).primaryColor)),
+                                ),
+                              ],
+                            ))
+                          ],
+                          color: Colors.white,
+                          iconSize: 30,
+                        )
+                      ],
+                    ),
                   ],
                 ),
-              ],
-            ),
+              );
+            },
           ),
         ],
       ),
@@ -253,19 +199,20 @@ class _songwidgetState extends State<songwidget> {
 
   removeFromPlaylist() {}
 
-  addFav() {
+  addFav(BuildContext context) {
     audioRoom1.addTo(
       RoomType.FAVORITES,
-      widget.song.getMap.toFavoritesEntity(),
+      song.getMap.toFavoritesEntity(),
       ignoreDuplicate: false,
     );
-    HomeScreen();
+    hiveCtrl.initializeFavorite();
+    BlocProvider.of<FavoriteBloc>(context).add(FavoriteEvent.load());
   }
 
   addSong() {
     // audioRoom1.addTo(
     //   RoomType.PLAYLIST,
-    //   widget.song.getMap.toFavoritesEntity(),
+    // song.getMap.toFavoritesEntity(),
     //   ignoreDuplicate: false,
     //   playlistKey: widget.,
     // );

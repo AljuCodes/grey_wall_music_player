@@ -1,37 +1,24 @@
 import 'package:assets_audio_player/assets_audio_player.dart';
 import 'package:flutter/material.dart';
-import 'package:grey_wall/main.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+
 import 'package:grey_wall/widgets/song_widget.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 
 import '../audio.dart';
+import '../logic/song_bloc/songbloc_bloc.dart';
 
-class SearchScreen extends StatefulWidget {
-  const SearchScreen({Key? key}) : super(key: key);
-
-  @override
-  _SearchScreenState createState() => _SearchScreenState();
-}
-
-class _SearchScreenState extends State<SearchScreen> {
+class SearchScreen extends StatelessWidget {
   final TextEditingController _textEditingController = TextEditingController();
   String searchingTerm = "";
-  List<dynamic> listOfSongMOdel = [];
-  // List<SongModel> ls = [];
-  // List<Audio> audioList = [];
-  @override
-  void initState() {
-    _textEditingController.clear();
-    // TODO: implement initState
-    super.initState();
-  }
+  final List<dynamic> listOfSongMOdel = [];
 
-  fn() async {
-    listOfSongMOdel = await OnAudioQuery().querySongs();
-  }
+  SearchScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    BlocProvider.of<SongBloc>(context).add(SongEvent.load());
     final width = MediaQuery.of(context).size.width;
     final height = MediaQuery.of(context).size.height;
     return Scaffold(
@@ -95,9 +82,8 @@ class _SearchScreenState extends State<SearchScreen> {
                         cursorColor: Colors.black,
                         showCursor: false,
                         onChanged: (value) async {
-                          setState(() {
-                            searchingTerm = value;
-                          });
+                          BlocProvider.of<SongBloc>(context)
+                              .add(SongEvent.search(query: value));
                         },
                       ),
                     ),
@@ -108,83 +94,36 @@ class _SearchScreenState extends State<SearchScreen> {
 
             SizedBox(
               height: height * .85,
-              child: (searchingTerm.isEmpty)
-                  ? FutureBuilder<List<SongModel>>(
-                      // Default values:
-                      future: OnAudioQuery().querySongs(
-                        sortType: SongSortType.DISPLAY_NAME,
-                        orderType: OrderType.ASC_OR_SMALLER,
-                      ),
-                      builder: (context, item) {
-                        // Loading content
-                        if (item.data == null)
-                          return const CircularProgressIndicator();
-                        if (item.data!.isEmpty)
-                          return const Text("Nothing found!");
-                        List<SongModel> SongModelList = item.data!;
-                        List<Audio> audioList = toAudio(SongModelList);
-                        return ListView.builder(
-                          itemCount: item.data!.length,
-                          itemBuilder: (context, index) {
-                            return songwidget(
-                              audioList: [
-                                Audio.file(SongModelList[index].data,
-                                    metas: Metas(
-                                      artist: SongModelList[index].artist,
-                                      title: SongModelList[index].title,
-                                      id: SongModelList[index].id.toString(),
-                                    ))
-                              ],
-                              song: item.data![index],
-                              artistName: item.data![index].artist!,
-                              index: 0,
-                              songName: item.data![index].title,
-                            );
-                          },
-                        );
-                      },
-                    )
-                  : FutureBuilder<List<SongModel>>(
-                      // Default values:
-                      future: OnAudioQuery().querySongs(
-                        sortType: SongSortType.DISPLAY_NAME,
-                        orderType: OrderType.ASC_OR_SMALLER,
-                      ),
-                      builder: (context, item) {
-                        // Loading content
-                        if (item.data == null)
-                          return const CircularProgressIndicator();
-                        if (item.data!.isEmpty)
-                          return const Text("Nothing found!");
-                        List<SongModel> allSongModel = item.data!;
-                        List<SongModel> SongModelList = allSongModel
-                            .where((song) => song.title
-                                .toLowerCase()
-                                .contains(searchingTerm))
-                            .toList();
+              child: BlocBuilder<SongBloc, List<SongModel>>(
+                builder: (context, List<SongModel> state) {
+                  // Loading content
+                  if (state == null) return const CircularProgressIndicator();
+                  if (state.isEmpty) return const Text("Nothing found!");
 
-                        List<Audio> audioList = toAudio(SongModelList);
-                        return ListView.builder(
-                          itemCount: SongModelList.length,
-                          itemBuilder: (context, index) {
-                            return songwidget(
-                              audioList: [
-                                Audio.file(SongModelList[index].data,
-                                    metas: Metas(
-                                      artist: SongModelList[index].artist,
-                                      title: SongModelList[index].title,
-                                      id: SongModelList[index].id.toString(),
-                                    ))
-                              ],
-                              song: SongModelList[index],
-                              artistName: SongModelList[index].artist!,
-                              index: 0,
-                              songName: SongModelList[index].title,
-                            );
-                          },
-                        );
-                      },
-                    ),
+                  List<SongModel> songModelList = state;
+
+                  List<Audio> audioList = toAudio(songModelList);
+                  return ListView.builder(
+                    itemCount: songModelList.length,
+                    itemBuilder: (context, index) {
+                      return SongWidget(
+                        audioList: [
+                          Audio.file(songModelList[index].data,
+                              metas: Metas(
+                                artist: songModelList[index].artist,
+                                title: songModelList[index].title,
+                                id: songModelList[index].id.toString(),
+                              ))
+                        ],
+                        song: songModelList[index],
+                        artistName: songModelList[index].artist!,
+                        index: 0,
+                        songName: songModelList[index].title,
+                      );
+                    },
+                  );
+                },
+              ),
             )
           ],
         ),

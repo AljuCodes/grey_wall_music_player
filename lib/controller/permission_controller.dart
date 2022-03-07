@@ -56,7 +56,7 @@ class PermissionController extends GetxController {
 bool getNotification(){
   return notification;
 }
-bool changeprmsn(bool value){
+bool changeNotify(bool value){
   notification = value;
   storage.write("notification", value);
   return notification;

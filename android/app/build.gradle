@@ -52,7 +52,7 @@ android {
         applicationId "in.madambigroup.grey_wall"
         minSdkVersion 29
         targetSdkVersion flutter.targetSdkVersion
-        versionCode 2
+        versionCode 4
         versionName flutterVersionName
     }
    signingConfigs {
